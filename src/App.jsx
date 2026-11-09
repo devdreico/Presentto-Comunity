@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   ArrowDown, ArrowRight, ArrowUpRight, Bookmark, Check, ChevronDown,
   ExternalLink, Search, Share2, Sparkles,
@@ -8,7 +9,7 @@ import {
 import logo from '../assets/presentto-logo.png';
 import { categories, posts, tools } from './data.js';
 
-gsap.registerPlugin(useGSAP);
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 const EcosystemScene = lazy(() => import('./EcosystemScene.jsx'));
 
 const dateFormatter = new Intl.DateTimeFormat('es-CO', {
@@ -241,12 +242,43 @@ export default function App() {
   useGSAP(() => {
     const media = gsap.matchMedia();
     media.add('(prefers-reduced-motion: no-preference)', () => {
-      gsap.fromTo('.page-reveal', { y: 18, opacity: 0 }, {
-        y: 0, opacity: 1, duration: 0.72, stagger: 0.07, ease: 'power3.out', clearProps: 'all',
-      });
-      gsap.fromTo('.feed-card', { y: 12, opacity: 0 }, {
-        y: 0, opacity: 1, duration: 0.52, stagger: 0.08, delay: 0.12, ease: 'power2.out', clearProps: 'all',
-      });
+      if (activeView === 'feed') {
+        gsap.timeline({ defaults: { ease: 'power3.out' } })
+          .fromTo('.hero-copy .eyebrow', { x: -24, opacity: 0 }, { x: 0, opacity: 1, duration: 0.55 })
+          .fromTo('.hero-copy h1', { y: 64, opacity: 0, clipPath: 'inset(0 0 100% 0)' }, { y: 0, opacity: 1, clipPath: 'inset(0 0 0% 0)', duration: 0.9 }, '-=0.2')
+          .fromTo('.hero-copy > p, .hero-cta-row, .hero-index', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, stagger: 0.12 }, '-=0.4');
+        gsap.fromTo('.hero-art', { scale: 0.82, rotate: 5, opacity: 0 }, {
+          scale: 1, rotate: 0, opacity: 1, duration: 1.15, ease: 'expo.out', clearProps: 'transform',
+        });
+        gsap.fromTo('.editorial-inner', { y: 30, opacity: 0 }, {
+          y: 0, opacity: 1, duration: 0.65, ease: 'power3.out',
+          scrollTrigger: { trigger: '.editorial-strip', start: 'top 88%', once: true },
+        });
+        gsap.utils.toArray('.feed-card').forEach((card, index) => {
+          gsap.fromTo(card, { y: 42, opacity: 0, rotateX: 3 }, {
+            y: 0, opacity: 1, rotateX: 0, duration: 0.72, delay: index * 0.04, ease: 'power3.out', clearProps: 'transform',
+            scrollTrigger: { trigger: card, start: 'top 92%', once: true },
+          });
+        });
+      } else {
+        gsap.fromTo('.tools-intro .eyebrow, .tools-intro h1, .tools-intro > p', { y: 34, opacity: 0 }, {
+          y: 0, opacity: 1, duration: 0.8, stagger: 0.13, ease: 'power3.out', clearProps: 'all',
+        });
+        gsap.fromTo('.recommendation-note', { x: 48, opacity: 0, rotate: 2 }, {
+          x: 0, opacity: 1, rotate: 0, duration: 0.95, delay: 0.22, ease: 'expo.out', clearProps: 'transform',
+        });
+        gsap.utils.toArray('.tool-card').forEach((card, index) => {
+          gsap.fromTo(card, { y: 34, opacity: 0, scale: 0.97 }, {
+            y: 0, opacity: 1, scale: 1, duration: 0.62, ease: 'power3.out', clearProps: 'transform',
+            scrollTrigger: { trigger: card, start: 'top 94%', once: true },
+            delay: (index % 3) * 0.07,
+          });
+        });
+        gsap.fromTo('.starter-card', { y: 28, opacity: 0 }, {
+          y: 0, opacity: 1, duration: 0.7, stagger: 0.14, ease: 'power3.out',
+          scrollTrigger: { trigger: '.starter-grid', start: 'top 88%', once: true },
+        });
+      }
     });
     return () => media.revert();
   }, { scope: contentRef, dependencies: [activeView], revertOnUpdate: true });
